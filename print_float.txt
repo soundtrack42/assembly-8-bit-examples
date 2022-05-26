@@ -1,0 +1,140 @@
+; Float division result (int / int)
+
+	JMP start
+dividendo:	DB 9
+divisore:	DB 6
+cifre_dopo_virgola:	DB 5
+
+start:
+	MOV A, [dividendo]
+	MOV B, [divisore]
+	CMP B, 0
+	JZ .end
+	CALL div
+	
+	.end:
+        	HLT             	; Stop execution
+
+div:
+	MOV C, A
+	DIV B
+	
+	PUSH C
+	PUSH B
+	PUSH A
+	CALL print
+	POP A
+	POP B
+	POP C
+
+	PUSH B
+	MOV [D], 44
+	INC D
+	MOV D, [cifre_dopo_virgola]	; counter
+.loop:
+	MUL B
+	SUB C, A
+	MOV A, C			; ?
+	MUL 10
+	MOV C, A
+
+	CMP C, 0			; no rest
+	JZ .return
+
+	DIV B
+
+	MOV B, D				
+
+	PUSH B				; save counter
+	CALL print_post_virg
+	POP B				; reload counter
+
+	
+	MOV D, B
+
+	POP B				; reload B
+	PUSH B
+
+	DEC D
+	CMP D, 0
+	JNZ .loop
+
+.return:
+	POP B
+	RET
+
+print:
+	MOV D, 232			; Point to output
+
+	MOV C, A
+	DIV 100
+	MUL 100
+	SUB C, A
+	PUSH A
+
+	MOV A, C
+	DIV 10
+	MUL 10
+	SUB C, A
+	PUSH A
+	
+	ADD C, 48
+
+	POP A
+	DIV 10
+	ADD A, 48
+	MOV B, A
+
+	POP A
+	DIV 100
+	ADD A, 48
+
+	CMP A, 48
+	JZ .2_number
+
+	MOV [D], A
+	INC D
+	MOV [D], B
+	INC D
+	MOV [D], C
+	INC D
+
+	RET
+
+.2_number:
+	CMP B, 48
+	JZ .1_number
+
+	MOV [D], B
+	INC D
+	MOV [D], C
+	INC D
+
+	RET
+
+.1_number:
+	MOV [D], C
+	INC D
+
+	RET
+
+print_post_virg:
+	MOV D, 232
+
+	PUSH C
+	MOV C, 0
+.loop2:				; find next free space in output
+	INC D
+	CMP C, [D]
+	JNZ .loop2
+
+	POP C
+	
+	ADD A, 48
+
+	MOV [D], A
+	INC D
+	
+	SUB A, 48
+
+	RET

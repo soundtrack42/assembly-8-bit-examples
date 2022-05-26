@@ -1,0 +1,111 @@
+; Sort of an array with single digit numbers (separated by ',')
+
+	JMP start
+array: DB "3,5,4,9,1" 		; Array
+       DB ",E"			; End array 
+
+start:
+	MOV C, array       	; Point to var
+	CALL size
+	CALL sort
+	MOV D, 232	   	; Point to output
+	CALL print
+        HLT                	; Stop execution
+
+size:				; count the array size
+	MOV B, 0
+	MOV A, 'E'		; E = end array
+.loop:
+	INC C
+	INC C
+	INC B
+	CMP A, [C]
+	JNZ .loop
+	
+	RET
+
+restart_pointer:
+	MOV A, B
+
+.loop2:				; decrement array address for the loop size
+	DEC C
+	DEC C
+	DEC A
+	CMP A, 0
+	JNZ .loop2
+	
+	RET
+
+sort:
+	MOV D, B
+	PUSH B			; save array size (in SP)
+.loop3:				; loop of loop
+	POP B			; reset B to the array size
+	PUSH B			; save array size (in SP)
+	DEC D
+	CALL restart_pointer	; return to the beginning of the array
+	
+	CMP D, 0
+	JZ .end1
+
+	.loop4:			; loop
+		DEC B
+		INC C
+		INC C
+		MOV A, [C]	; copy in A the next element of the array
+		DEC C
+		DEC C
+
+		CMP A, [C]
+		JB .swap
+
+		INC C
+		INC C
+	
+		CMP B, 0
+		JNZ .loop4
+	JZ .loop3
+	
+		.swap:			; swap C and A values
+			PUSH [C]
+			MOV [C], A
+			INC C
+			INC C
+			POP A
+			MOV [C], A
+
+		CMP B, 0
+		JNZ .loop4
+	JZ .loop3
+
+.end1:
+	POP B
+	RET
+
+
+print:
+.loop5:
+	MOV A, [C]
+	CMP A, 'E'			; array end
+	JZ .end2
+
+	CMP A, 44
+	JZ .print_space
+	JNZ .print_numb
+
+	.print_numb:
+		MOV [D], A
+		INC D
+		INC C
+
+	        JMP .loop5
+
+	.print_space:
+		MOV [D], 0		; 0 = 'space'
+		INC C
+		INC D
+		
+	        JMP .loop5
+
+.end2:
+	RET
